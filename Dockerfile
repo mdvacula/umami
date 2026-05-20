@@ -6,7 +6,7 @@ FROM node:${NODE_IMAGE_VERSION} AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-RUN npm install -g pnpm@9
+RUN npm install -g pnpm
 RUN pnpm install --frozen-lockfile
 
 # Rebuild the source code only when needed
@@ -39,10 +39,12 @@ RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 RUN set -x \
     && apk add --no-cache curl \
-    && npm install -g pnpm@9
+    && npm install -g pnpm
+
+COPY --from=builder /app/pnpm-workspace.yaml ./
 
 # Script dependencies
-RUN pnpm --allow-build='@prisma/engines' --allow-build='prisma' --allow-build='@prisma/client' add npm-run-all dotenv chalk semver \
+RUN pnpm add npm-run-all dotenv chalk semver \
     prisma@${PRISMA_VERSION} \
     @prisma/client@${PRISMA_VERSION} \
     @prisma/adapter-pg@${PRISMA_VERSION}
